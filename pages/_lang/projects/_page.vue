@@ -55,16 +55,16 @@
         </ul>
 
         <div id="project-list-footer">
-          <b-pagination-nav class="d-inline-flex" base-url="/projects/" :number-of-pages="maxPages" v-model.number="page" use-router></b-pagination-nav>
+          <b-pagination-nav class="d-inline-flex" :link-gen="generatePaginationLink" :number-of-pages="maxPages" v-model.number="page" use-router></b-pagination-nav>
         </div>
       </b-col>
 
       <b-col md="3">
-        <b-card id="category-selection">
+        <b-card id="categories">
           <h6 slot="header" class="mb-0">Categories</h6>
           <ul>
             <li v-for="category in categories" v-bind:key="category.title">
-              <nuxt-link :to="generateCategoryLink($store.state.locale, category.id)">
+              <nuxt-link :to="generateCategoryLink($store.state.locale, category.id)" exact :class="{active: isCategoryActive(category.id)}">
                 <fa-icon :icon="['fas', category.icon]" :fixed-width="true"/>
                 <span>{{ category.title }}</span>
               </nuxt-link>
@@ -78,80 +78,104 @@
 
 <script>
   import Vue from "vue"
-  import Component from "nuxt-class-component"
+  import {Component} from "nuxt-property-decorator"
   import axios from "axios"
   import Tag from "../../../components/Tag"
+  import {Utils} from "../../../utils/utils";
+  import {Requests} from "../../../utils/requests";
+  import {stringify} from "qs"
 
   @Component({
     components: {
       Tag
-    }
+    },
+    watchQuery: ['categories']
   })
   export default class ProjectList extends Vue {
 
-    queriedCategories = [];
-
     validate({params, query}) {
-      return /^\d+$/.test(params.page) && /^(\d+)?(,\d+)*/.test(query.categories)
+      return /^\d+$/.test(params.page) // page param has to be an integer
+        && /^(\d+)?(,\d+)*/.test(query.categories) // categories query has to be an integer or a comma separated integer list (e.g. 1 or 1,2,3)
     }
 
-    async asyncData({params, query, error}) {
-      let page = parseInt(params.page);
-      let perPage = 30;
+    async asyncData({params, query, error, redirect}) {
+      let page = parseInt(params.page); // params.page is already validated to be an integer, see https://nuxtjs.org/api/pages-validate/
+      let perPage = process.env.PROJECTS_PER_PAGE || 25;
 
-      let categories = query.categories ? "&categories=" + query.categories : "";
-
-      return axios.all(
-        [
-          axios.get("projects?limit=" + perPage + "&offset=" + (page - 1) * perPage + categories),
-          axios.get("categories")
-        ]
-      ).then(axios.spread((projects, categories) => {
+      return axios.all([Requests.getProjects(perPage, (page - 1) * perPage, query.categories), Requests.getCategories()])
+        .then(axios.spread((projects, categories) => {
           let maxPages = Math.ceil(projects.data.projectCount / perPage);
+          let queriedCategories = [];
 
+          // Checks if the page exists
           if (page > maxPages) {
-            error({statusCode: 404, message: 'Page Not Found'})
-          } else {
-            return {
-              projects: projects.data.projects,
-              categories: categories.data,
-              page: page,
-              maxPages: maxPages
-            }
+            error({statusCode: 404, message: 'Page Not Found'}) //todo error type and message
           }
-        })
-      ).catch((e) => {
-        error({statusCode: 500, message: e.message})
-      });
+
+          // If filter contains all available categories, reset the category filter
+          if(query.categories != null && Utils.stringListToArray(query.categories).length >= categories.data.length) {
+            delete query.categories;
+
+            redirect('/projects/1', query);
+          } else if (query.categories != null) {
+            // params.categories is already validated to be a comma separated integer list, see https://nuxtjs.org/api/pages-validate/
+            queriedCategories = Utils.stringListToArray(query.categories).map(category => parseInt(category));
+          }
+
+          console.log(queriedCategories)
+
+          return {
+            projects: projects.data.projects,
+            categories: categories.data,
+            page: page,
+            maxPages: maxPages,
+            queriedCategories: queriedCategories
+          }
+        }))
+        .catch((e) => {
+          error({statusCode: 500, message: e.message}) //todo error type and message
+        });
     }
 
-    created() {
-      this.queriedCategories = this.$nuxt.$route.query.categories ? this.$nuxt.$route.query.categories.split(",").map(category => parseInt(category)) : [];
-    }
+    getQueriedCategories(ignoredCategory) {
+      let list = this.queriedCategories.slice(0);
 
-    get getCategoryStringList() {
-      let categories = "";
+      if (list.indexOf(ignoredCategory) >= 0) {
+        list.splice(list.indexOf(ignoredCategory), 1);
+      }
 
-      this.queriedCategories.forEach(category => {
-        categories += category + ",";
-      });
-
-      return categories.substring(0, categories.length - 1);
+      return Utils.arrayToStringList(list);
     }
 
     generateCategoryLink(locale, categoryID) {
-      if (this.queriedCategories.indexOf(categoryID) >= 0) {
-        return {path: '/' + locale + '/projects/1', query: {categories: "true"}}
+      let query = Object.assign({}, this.$nuxt.$route.query);
+
+      if (this.isCategoryActive(categoryID)) {
+        let queried = this.getQueriedCategories(categoryID);
+
+        if(!queried) {
+          delete query.categories;
+        } else {
+          query.categories = queried;
+        }
       } else {
-        return {path: '/' + locale + '/projects/1', query: {categories: this.getCategoryStringList + "," + categoryID}}
+        query.categories = (this.getQueriedCategories() ?  this.getQueriedCategories() + "," : "") + categoryID;
       }
+
+      return {path: '/' + locale + '/projects/1', query};
+    }
+
+    isCategoryActive(categoryID) {
+      return this.queriedCategories.indexOf(categoryID) >= 0;
+    }
+
+    generatePaginationLink(page) {
+      return "/projects/" + page + "?" + stringify(this.$nuxt.$route.query);
     }
   }
 </script>
 
 <style lang="scss">
-  @import "../../../node_modules/sponge-web-commons/styles/variables";
-
   .card {
     border-radius: 0;
 
@@ -270,7 +294,7 @@
       }
     }
 
-    #category-selection {
+    #categories {
       .card-body {
         padding: 0;
       }
@@ -286,8 +310,18 @@
           a {
             display: block;
             padding: 0.5rem 1rem;
+            color: $sponge_grey;
+
+            &.active {
+              box-shadow: inset -10px 0px 0px 0px $sponge_yellow;
+            }
+
+            &:hover {
+              text-decoration: none;
+            }
 
             svg {
+              color: $sponge_grey_dark;
               margin-right: 1rem;
             }
           }

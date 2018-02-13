@@ -20,8 +20,11 @@
     "@fortawesome/vue-fontawesome": "0.0.22",
     "axios": "^0.17.1",
     "bootstrap-vue": "^2.0.0-rc.1",
+    "dotenv-webpack": "^1.5.4",
     "nuxt": "^1.0.0",
     "nuxt-property-decorator": "^1.0.0",
+    "nuxt-sass-resources-loader": "^1.1.1",
+    "qs": "^6.5.1",
     "sponge-web-commons": "git+https://github.com/felixoi/SpongeWebCommons.git#acdca8ddd91869f9b370d39d5335a450ce5cb6aa",
     "vue": "^2.5.13",
     "vue-i18n": "^7.4.2"
