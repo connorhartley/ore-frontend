@@ -1,4 +1,4 @@
-# ore-frontend
+# ore-frontend [![Build Status](https://travis-ci.org/felixoi/ore-frontend.svg?branch=master)](https://travis-ci.org/felixoi/ore-frontend)
 
 > The ore frontend
 
