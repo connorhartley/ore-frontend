@@ -122,8 +122,6 @@
             queriedCategories = Utils.stringListToArray(query.categories).map(category => parseInt(category));
           }
 
-          console.log(queriedCategories)
-
           return {
             projects: projects.data.projects,
             categories: categories.data,
