@@ -8,7 +8,7 @@ export class Requests {
 
   static getProjects(limit, offset, categories, query) {
     return axios.get("/v1/projects", {
-      params: {limit: limit, offset: offset, categories: categories, query: query}
+        params: {limit: limit, offset: offset, categories: categories, q: query}
     });
   }
 

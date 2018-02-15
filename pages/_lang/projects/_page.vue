@@ -102,7 +102,7 @@
       let page = parseInt(params.page); // params.page is already validated to be an integer, see https://nuxtjs.org/api/pages-validate/
       let perPage = process.env.PROJECTS_PER_PAGE || 25;
 
-      return axios.all([Requests.getProjects(perPage, (page - 1) * perPage, query.categories), Requests.getCategories()])
+      return axios.all([Requests.getProjects(perPage, (page - 1) * perPage, query.categories, query.q), Requests.getCategories()])
         .then(axios.spread((projects, categories) => {
           let maxPages = Math.ceil(projects.data.projectCount / perPage);
           let queriedCategories = [];
