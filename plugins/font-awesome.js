@@ -24,12 +24,13 @@ import faLock from "@fortawesome/fontawesome-free-solid/faLock"
 import faMagic from "@fortawesome/fontawesome-free-solid/faMagic"
 import faGlobe from "@fortawesome/fontawesome-free-solid/faGlobe"
 import faAsterisk from "@fortawesome/fontawesome-free-solid/faAsterisk"
+import faTimes from "@fortawesome/fontawesome-free-solid/faTimes"
 
 fontawesome.config = {
   autoAddCss: false,
 };
 
 fontawesome.library.add(faChevronDown, faHome, faDiscourse, faCode, faBook, faGraduationCap, faPlug, faDownload,
-  faComments, faBars, faEye, faStar, faServer, faComment, faWrench, faPuzzlePiece, faGamepad, faMoneyBillAlt, faLock, faMagic, faGlobe, faAsterisk);
+  faComments, faBars, faEye, faStar, faServer, faComment, faWrench, faPuzzlePiece, faGamepad, faMoneyBillAlt, faLock, faMagic, faGlobe, faAsterisk, faTimes);
 
 Vue.component("fa-icon", FontAwesomeIcon);

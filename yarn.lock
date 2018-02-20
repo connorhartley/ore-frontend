@@ -6114,9 +6114,9 @@ split-string@^3.0.1, split-string@^3.0.2:
   dependencies:
     extend-shallow "^3.0.0"
 
-"sponge-web-commons@git+https://github.com/felixoi/SpongeWebCommons.git#acdca8ddd91869f9b370d39d5335a450ce5cb6aa":
+"sponge-web-commons@git+https://github.com/felixoi/SpongeWebCommons.git#1587ef098efba54156ebbe8886f9ee734035605f":
   version "0.0.1"
-  resolved "git+https://github.com/felixoi/SpongeWebCommons.git#acdca8ddd91869f9b370d39d5335a450ce5cb6aa"
+  resolved "git+https://github.com/felixoi/SpongeWebCommons.git#1587ef098efba54156ebbe8886f9ee734035605f"
 
 sprintf-js@~1.0.2:
   version "1.0.3"

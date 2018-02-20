@@ -27,11 +27,11 @@
           <b-row>
             <b-col md="2">
               <h5>Ore API</h5>
-              <a class="btn dark" href="https://docs.spongepowered.org/stable/en/ore/api.html">API</a>
+              <b-button variant="sponge-dark" href="https://docs.spongepowered.org/stable/en/ore/api.html">API</b-button>
             </b-col>
             <b-col md="2">
               <h5>Help Needed?</h5>
-              <a class="btn dark" href="https://forums.spongepowered.org/c/plugins/ore-support">Forums</a>
+              <b-button variant="sponge-dark" href="https://forums.spongepowered.org/c/plugins/ore-support">Forums</b-button>
             </b-col>
             <b-col md="4">
               <a href="https://www.spongepowered.org">
@@ -40,11 +40,11 @@
             </b-col>
             <b-col md="2">
               <h5>Found an Issue?</h5>
-              <a class="btn dark" target="_blank" href="https://github.com/SpongePowered/Ore/issues">Issues</a>
+              <b-button variant="sponge-dark" target="_blank" href="https://github.com/SpongePowered/Ore/issues">Issues</b-button>
             </b-col>
             <b-col md="2">
               <h5>Our Sponsors</h5>
-              <a class="btn dark" href="https://www.spongepowered.org/sponsors">Sponsors</a>
+              <b-button variant="sponge-dark" href="https://www.spongepowered.org/sponsors">Sponsors</b-button>
             </b-col>
           </b-row>
         </b-container>

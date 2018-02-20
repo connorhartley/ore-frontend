@@ -2,6 +2,13 @@
   <div id="project-list">
     <b-row>
       <b-col md="9">
+        <b-input-group id="project-search">
+          <b-form-input v-model="query" @keydown.enter.native="search"></b-form-input>
+          <b-input-group-append>
+            <b-btn variant="sponge-yellow" v-on:click="search">Search</b-btn>
+          </b-input-group-append>
+        </b-input-group>
+
         <ul id="projects">
           <li v-for="project in projects" v-bind:key="project.name">
             <b-container>
@@ -44,7 +51,7 @@
                     </b-col>
                     <b-col sm="12" lg="6">
                       <div class="project-tags">
-
+                       <tag v-for="tag in project.recommended.tags" :name="tag.name" :data="tag.data" :color="tag.backgroundColor" :key="tag.name"></tag>
                       </div>
                     </b-col>
                   </b-row>
@@ -60,8 +67,12 @@
       </b-col>
 
       <b-col md="3">
+        <b-form-select v-model="selectedStrategy" :options="strategies" v-on:input="changeSorting"></b-form-select>
         <b-card id="categories">
-          <h6 slot="header" class="mb-0">Categories</h6>
+          <h6 slot="header">
+            Categories
+            <fa-icon :icon="['fas', 'times']" :fixed-width="true" v-if="queriedCategories.length > 0" v-on:click="resetCategoryFilter()" />
+          </h6>
           <ul>
             <li v-for="category in categories" v-bind:key="category.title">
               <nuxt-link :to="generateCategoryLink($store.state.locale, category.id)" exact :class="{active: isCategoryActive(category.id)}">
@@ -89,21 +100,22 @@
     components: {
       Tag
     },
-    watchQuery: ['categories']
+    watchQuery: ['categories', 'sort', 'q']
   })
   export default class ProjectList extends Vue {
 
     validate({params, query}) {
       return /^\d+$/.test(params.page) // page param has to be an integer
-        && /^(\d+)?(,\d+)*/.test(query.categories) // categories query has to be an integer or a comma separated integer list (e.g. 1 or 1,2,3)
+        && /^\d+$/.test(query.sort || 0) // sort param has to be an integer
+        && /^(\d+)?(,\d+)*/.test(query.categories || 0) // categories query has to be an integer or a comma separated integer list (e.g. 1 or 1,2,3)
     }
 
     async asyncData({params, query, error, redirect}) {
       let page = parseInt(params.page); // params.page is already validated to be an integer, see https://nuxtjs.org/api/pages-validate/
       let perPage = process.env.PROJECTS_PER_PAGE || 25;
 
-      return axios.all([Requests.getProjects(perPage, (page - 1) * perPage, query.categories, query.q), Requests.getCategories()])
-        .then(axios.spread((projects, categories) => {
+      return axios.all([Requests.getProjects(perPage, (page - 1) * perPage, query.categories, query.q, query.sort), Requests.getProjectCategories(), Requests.getProjectSortingStrategies()])
+        .then(axios.spread((projects, categories, strategies) => {
           let maxPages = Math.ceil(projects.data.projectCount / perPage);
           let queriedCategories = [];
 
@@ -113,7 +125,7 @@
           }
 
           // If filter contains all available categories, reset the category filter
-          if(query.categories != null && Utils.stringListToArray(query.categories).length >= categories.data.length) {
+          if (query.categories != null && Utils.stringListToArray(query.categories).length >= categories.data.length) {
             delete query.categories;
 
             redirect('/projects/1', query);
@@ -127,7 +139,12 @@
             categories: categories.data,
             page: page,
             maxPages: maxPages,
-            queriedCategories: queriedCategories
+            queriedCategories: queriedCategories,
+            strategies: strategies.data.strategies.map(strategy => {
+              return {value: strategy.id, text: strategy.title};
+            }),
+            selectedStrategy: query.sort || strategies.data.default.id,
+            query: query.q || null
           }
         }))
         .catch((e) => {
@@ -151,13 +168,13 @@
       if (this.isCategoryActive(categoryID)) {
         let queried = this.getQueriedCategories(categoryID);
 
-        if(!queried) {
+        if (!queried) {
           delete query.categories;
         } else {
           query.categories = queried;
         }
       } else {
-        query.categories = (this.getQueriedCategories() ?  this.getQueriedCategories() + "," : "") + categoryID;
+        query.categories = (this.getQueriedCategories() ? this.getQueriedCategories() + "," : "") + categoryID;
       }
 
       return {path: '/' + locale + '/projects/1', query};
@@ -167,26 +184,37 @@
       return this.queriedCategories.indexOf(categoryID) >= 0;
     }
 
+    resetCategoryFilter() {
+      let query = Object.assign({}, this.$nuxt.$route.query);
+
+      delete query.categories;
+
+      this.$nuxt.$router.push({ path: '/projects/1', query});
+    }
+
     generatePaginationLink(page) {
       return "/projects/" + page + "?" + stringify(this.$nuxt.$route.query);
+    }
+
+    changeSorting(value) {
+      this.$nuxt.$router.push({ path: '/projects/1', query: {...this.$nuxt.$route.query, sort: value}});
+    }
+
+    search() {
+      if(this.query) {
+        this.$nuxt.$router.push({ path: '/projects/1', query: {...this.$nuxt.$route.query, q: this.query}});
+      } else {
+        let query = Object.assign({}, this.$nuxt.$route.query);
+
+        delete query.q;
+
+        this.$nuxt.$router.push({ path: '/projects/1', query});
+      }
     }
   }
 </script>
 
 <style lang="scss">
-  .card {
-    border-radius: 0;
-
-    .card-header, .card-footer {
-      background: $sponge_grey;
-      color: #ffffff;
-
-      &:first-child, &:last-child {
-        border-radius: 0;
-      }
-    }
-  }
-
   $item-background: #ffffff;
   $item-border: 1px solid #ddd;
   $project-stats-color: #808080;
@@ -293,6 +321,17 @@
     }
 
     #categories {
+      .card-header h6 {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0;
+
+        svg {
+          cursor: pointer;
+        }
+      }
+
       .card-body {
         padding: 0;
       }

@@ -2,13 +2,17 @@ import axios from "axios"
 
 export class Requests {
 
-  static getCategories() {
-    return axios.get("/v1/categories");
+  static getProjectCategories() {
+    return axios.get("/v1/project-categories");
   }
 
-  static getProjects(limit, offset, categories, query) {
+  static getProjectSortingStrategies() {
+    return axios.get("/v1/project-sorting-strategies");
+  }
+
+  static getProjects(limit, offset, categories, query, sort) {
     return axios.get("/v1/projects", {
-        params: {limit: limit, offset: offset, categories: categories, q: query}
+        params: {limit, offset, categories, q: query, sort}
     });
   }
 

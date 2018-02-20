@@ -7,7 +7,7 @@
 
 <script>
   import Vue from "vue"
-  import Component from "vue-class-component"
+  import Component from "nuxt-class-component"
   import {Prop} from "vue-property-decorator"
 
   @Component({})
