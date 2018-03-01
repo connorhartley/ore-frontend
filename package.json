@@ -35,7 +35,7 @@
     "dotenv-webpack": "^1.5.4",
     "eslint": "^4.17.0",
     "eslint-friendly-formatter": "^3.0.0",
-    "eslint-loader": "^1.7.1",
+    "eslint-loader": "^2.0.0",
     "eslint-plugin-vue": "^4.0.0",
     "node-sass": "^4.7.2",
     "nuxt-class-component": "^1.2.0",
